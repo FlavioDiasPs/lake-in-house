@@ -1,0 +1,18 @@
+// {
+//     "configurations": [
+//         {
+//             "type": "debugpy",
+//             "request": "launch",
+//             "name": "Launch CSV to Postgres Producer",
+//             "program": "${workspaceFolder}/projects/csv-to-postgres-producer/src/main.py",
+//             "python": "${workspaceFolder}/projects/csv-to-postgres-producer/.venv/Scripts/python.exe"
+//         },
+//         {
+//             "type": "debugpy",
+//             "request": "launch",
+//             "name": "Launch Flink Pipelines",
+//             "program": "${workspaceFolder}/projects/flink-pipelines/src/main.py",
+//             "python": "${workspaceFolder}/projects/flink-pipelines/.venv/Scripts/python.exe"
+//         }
+//     ]
+// }

@@ -1,10 +1,6 @@
 def main():
-    print("Helllo!")
-    print("Bye")
+    print("Hello from lake-in-house!")
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(e)
+    main()
