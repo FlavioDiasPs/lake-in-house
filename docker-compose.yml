@@ -15,7 +15,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: postgres@postgres.com
       PGADMIN_DEFAULT_PASSWORD: postgres
     ports:
-      - "5050:80"
+      - "5050:80" # "HOST_PORT:CONTAINER_PORT"
     depends_on:       
       - postgres
     networks:
@@ -26,14 +26,14 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres     
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
+      POSTGRES_DB: postgres         
     ports:
       - "5432:5432"
     command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=5", "-c", "max_wal_senders=7"]
     networks:
       - infra-net
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.9.0
@@ -102,6 +102,8 @@ services:
       - zookeeper
     networks:
       - infra-net
+    volumes:
+    - kafka-connect-data:/etc/kafka-connect
     command:
       - bash
       - -c
@@ -129,10 +131,62 @@ services:
       - kafka-connect
     networks:
       - infra-net    
+    volumes:
+    - kafka-ui-data:/tmp/hsperfdata_kafkaui
+
+  flink-jobmanager:
+    image: apache/flink:1.17.1-scala_2.12
+    container_name: flink-jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    ports:
+      - "8081:8081"  # Flink Web UI
+    depends_on:
+      - kafka
+      - zookeeper
+    networks:
+      - infra-net
+    command: jobmanager
+    restart: always
+
+  flink-taskmanager:
+    image: apache/flink:1.17.1-scala_2.12
+    container_name: flink-taskmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    depends_on:
+      - flink-jobmanager
+    networks:
+      - infra-net
+    command: taskmanager
+    restart: always
+      
+  zeppelin:
+    image: apache/zeppelin:0.10.1
+    container_name: zeppelin
+    ports:
+      - "8089:8080"  # Zeppelin Web UI    
+    environment:
+    - ZEPPELIN_ADDR=0.0.0.0
+    - ZEPPELIN_FLINK_JOBMANAGER_URL=flink-jobmanager:8081  # Flink JobManager REST endpoint URL
+    - ZEPPELIN_FLINK_EXECUTION_MODE=remote  # Execution mode set to remote
+    - ZEPPELIN_FLINK_EXECUTION_REMOTE_HOST=flink-jobmanager  # JobManager host
+    - ZEPPELIN_FLINK_EXECUTION_REMOTE_PORT=8081  # JobManager port    
+    - FLINK_HOME=/opt/flink
+    depends_on:
+      - flink-jobmanager
+    networks:
+      - infra-net
+    volumes:
+      - zeppelin-data:/opt/zeppelin
+    
 
 volumes:
   postgres-data:
   kafka-logs:
+  kafka-ui-data:
+  kafka-connect-data:
+  zeppelin-data:
 
 networks:
   infra-net:

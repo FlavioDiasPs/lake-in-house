@@ -1,5 +1,5 @@
 # app
-csv-to-postgres-producer/data/csv/crypto/*
+projects/csv-to-postgres-producer/data/csv/crypto/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
