@@ -1,5 +1,5 @@
 # app
-projects/csv-to-postgres-producer/data/csv/crypto/*
+projects/sample_data*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -132,7 +132,7 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.venv*
 env/
 venv/
 ENV/

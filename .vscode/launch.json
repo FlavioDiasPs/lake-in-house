@@ -1,18 +1,19 @@
-// {
-//     "configurations": [
-//         {
-//             "type": "debugpy",
-//             "request": "launch",
-//             "name": "Launch CSV to Postgres Producer",
-//             "program": "${workspaceFolder}/projects/csv-to-postgres-producer/src/main.py",
-//             "python": "${workspaceFolder}/projects/csv-to-postgres-producer/.venv/Scripts/python.exe"
-//         },
-//         {
-//             "type": "debugpy",
-//             "request": "launch",
-//             "name": "Launch Flink Pipelines",
-//             "program": "${workspaceFolder}/projects/flink-pipelines/src/main.py",
-//             "python": "${workspaceFolder}/projects/flink-pipelines/.venv/Scripts/python.exe"
-//         }
-//     ]
-// }
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "csv-to-postgres-producer",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/projects/csv-to-postgres-producer/src/main.py",
+            "python": "${workspaceFolder}/projects/csv-to-postgres-producer/.venv/scripts/python.exe"
+        },
+        {
+            "name": "flink-pipelines",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "python": "${workspaceFolder}/projects/flink-pipelines/.venv/scripts/python"
+        }
+    ]
+}
