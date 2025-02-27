@@ -2,7 +2,7 @@ services:
   csv-to-postgres-producer:
     build:
       context: .
-      dockerfile: csv-to-postgres-producer/Dockerfile
+      dockerfile: projects/csv-to-postgres-producer/Dockerfile
     image: csv-to-postgres-producer:0.1  
     depends_on:
       - postgres
@@ -139,8 +139,10 @@ services:
     container_name: flink-jobmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - FLINK_JVM_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"  # Enable remote debugging
     ports:
       - "8081:8081"  # Flink Web UI
+      - "5005:5005"  # Remote Debugging Port
     depends_on:
       - kafka
       - zookeeper
@@ -154,6 +156,7 @@ services:
     container_name: flink-taskmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+      - FLINK_JVM_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"  # Enable remote debugging
     depends_on:
       - flink-jobmanager
     networks:

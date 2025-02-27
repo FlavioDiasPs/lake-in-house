@@ -6,12 +6,11 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 
-path_csv = "projects/csv-to-postgres-producer/data/csv/crypto/"
+path_csv = "projects/sample_data/"
 
 
 def create_duckdb_connection():
-    conn = duckdb.connect(database=":memory:", read_only=False)
-    return conn
+    return duckdb.connect(database=":memory:", read_only=False)
 
 
 def create_postgres_engine():
