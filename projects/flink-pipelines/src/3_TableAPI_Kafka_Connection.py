@@ -1,10 +1,25 @@
 from pyflink.table import EnvironmentSettings, TableEnvironment
-
+from sqlalchemy import create_engine, text
 import os
 
 os.environ["FLINK_ENV_JAVA_OPTS"] = (
     "--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED"
 )
+
+
+engine = create_engine("postgresql://postgres:postgres@host.docker.internal:5432/postgres")
+with engine.connect() as conn:
+    conn.execute(
+        text("""
+            CREATE TABLE IF NOT EXISTS flink_aggregated_deposits (
+                window_end TIMESTAMP(3),
+                currency TEXT,
+                avg_amount NUMERIC(38,18)
+            );
+        """)
+    )
+    conn.commit()
+
 
 # Create Table Environment (pure Table API, no DataStream API)
 env_settings = EnvironmentSettings.in_streaming_mode()
@@ -18,7 +33,7 @@ table_env.execute_sql("""
     CREATE TABLE kafka_source_raw (
         before MAP<STRING, STRING>,
         after ROW<
-                id INT,btf
+                id INT,
                 event_timestamp STRING,
                 user_id STRING,
                 currency STRING,
@@ -46,34 +61,36 @@ table_env.execute_sql("""
             avg_amount DECIMAL(38, 18)
         ) WITH (
             'connector' = 'print'
-        );                   
+        );
 """)
 print("kafka_source_halfway")
 
 
-table_env.execute_sql("""    
+table_env.execute_sql("""
+    CREATE TABLE postgres_sink (
+        window_end TIMESTAMP(3),
+        currency STRING,
+        avg_amount DECIMAL(38, 18)
+    ) WITH (
+        'connector' = 'jdbc',
+        'url' = 'jdbc:postgresql://localhost:5432/postgres',
+        'table-name' = 'flink_aggregated_deposits',
+        'username' = 'postgres',
+        'password' = 'postgres',
+        'driver' = 'org.postgresql.Driver'
+    );
+""")
+print("postgres_sink")
+
+table_env.execute_sql("""
+    INSERT INTO postgres_sink
     SELECT
         TUMBLE_END(computed_event_timestamp, INTERVAL '10' SECONDS) AS window_end,
         after.currency AS currency,
         AVG(after.amount) AS avg_amount
     FROM kafka_source_raw
     GROUP BY TUMBLE(computed_event_timestamp, INTERVAL '10' SECONDS), after.currency
-
 """).print()
 
+
 print("ended")
-
-
-# SELECT
-#     TUMBLE_END(computed_event_timestamp, INTERVAL '10' SECONDS) AS window_end,
-#     after.currency AS currency,
-#     AVG(after.amount) AS avg_amount
-# FROM kafka_source_raw
-# GROUP BY TUMBLE(computed_event_timestamp, INTERVAL '10' SECONDS), after.currency
-
-
-#    SELECT
-#     computed_event_timestamp AS window_end,
-#     after.currency AS currency,
-#     after.amount AS avg_amount
-# FROM kafka_source_raw
