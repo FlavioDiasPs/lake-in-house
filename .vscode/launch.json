@@ -5,7 +5,7 @@
             "name": "csv-to-postgres-producer",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/projects/csv-to-postgres-producer/src/main.py",
+            "program": "${workspaceFolder}/projects/csv-to-postgres-producer/main.py",
             "python": "${workspaceFolder}/projects/csv-to-postgres-producer/.venv/scripts/python.exe"
         },
         {
