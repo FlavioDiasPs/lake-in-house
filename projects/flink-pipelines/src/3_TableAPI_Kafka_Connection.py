@@ -1,43 +1,79 @@
 from pyflink.table import EnvironmentSettings, TableEnvironment
 
-# Set up the Table API environment
+import os
+
+os.environ["FLINK_ENV_JAVA_OPTS"] = (
+    "--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED"
+)
+
+# Create Table Environment (pure Table API, no DataStream API)
 env_settings = EnvironmentSettings.in_streaming_mode()
 table_env = TableEnvironment.create(env_settings)
+table_env.get_config().get_configuration().set_string("table.exec.source.idle-timeout", "1000")
 
+print("Starting")
 
 # Define source table (Kafka)
 table_env.execute_sql("""
-    CREATE TABLE kafka_source (
-        id INT,
-        event_timestamp TIMESTAMP(3),
-        user_id STRING,1
-        currency STRING,
-        tx_status STRING
+    CREATE TABLE kafka_source_raw (
+        before MAP<STRING, STRING>,
+        after ROW<
+                id INT,btf
+                event_timestamp STRING,
+                user_id STRING,
+                currency STRING,
+                amount DECIMAL(38, 18)>,
+        source MAP<STRING, STRING>,
+        op STRING,
+        ts_ms BIGINT,
+        transaction MAP<STRING, STRING>,
+        computed_event_timestamp AS TO_TIMESTAMP(REGEXP_REPLACE(after.event_timestamp, '\\+00$', ''), 'yyyy-MM-dd HH:mm:ss.SSS'),
+        WATERMARK FOR computed_event_timestamp AS computed_event_timestamp - INTERVAL '10' SECONDS
     ) WITH (
         'connector' = 'kafka',
-        'topic' = 'transactions',
-        'properties.bootstrap.servers' = 'kafka:9092',
+        'topic' = 'dbserver1.public.deposit_sample_data',
+        'properties.bootstrap.servers' = 'localhost:9092',
         'format' = 'json',
         'scan.startup.mode' = 'earliest-offset'
-    )
+    );
 """)
+print("kafka_source_raw")
 
-# Define sink table (Print to console for debugging)
 table_env.execute_sql("""
-    CREATE TABLE print_sink (
-        id INT,
-        user_id STRING,
-        amount DOUBLE
-    ) WITH (
-        'connector' = 'print'
-    )
+        CREATE TABLE kafka_source_halfway (
+            window_end TIMESTAMP(3),
+            currency STRING,
+            avg_amount DECIMAL(38, 18)
+        ) WITH (
+            'connector' = 'print'
+        );                   
 """)
+print("kafka_source_halfway")
 
-# Insert data into sink
-table_env.execute_sql("""
-    INSERT INTO print_sink
-    SELECT id, user_id, amount FROM kafka_source
-""")
 
-# Execute the Flink job
-# env.execute("Flink SQL Kafka Job")
+table_env.execute_sql("""    
+    SELECT
+        TUMBLE_END(computed_event_timestamp, INTERVAL '10' SECONDS) AS window_end,
+        after.currency AS currency,
+        AVG(after.amount) AS avg_amount
+    FROM kafka_source_raw
+    GROUP BY TUMBLE(computed_event_timestamp, INTERVAL '10' SECONDS), after.currency
+
+""").print()
+
+print("ended")
+
+
+# SELECT
+#     TUMBLE_END(computed_event_timestamp, INTERVAL '10' SECONDS) AS window_end,
+#     after.currency AS currency,
+#     AVG(after.amount) AS avg_amount
+# FROM kafka_source_raw
+# GROUP BY TUMBLE(computed_event_timestamp, INTERVAL '10' SECONDS), after.currency
+
+
+#    SELECT
+#     computed_event_timestamp AS window_end,
+#     after.currency AS currency,
+#     after.amount AS avg_amount
+# FROM kafka_source_raw
