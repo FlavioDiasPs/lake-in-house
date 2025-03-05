@@ -1,0 +1,13 @@
+# Use official Python runtime as base image
+FROM apache/flink:1.17.1-scala_2.12
+
+# Install uv (and any dependencies)
+RUN apt-get update
+RUN apt-get install -y python3.11 python3.11-distutils python3-pip
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python
+
+COPY projects/flink-pipelines/src app/
+COPY projects/flink-pipelines/jars/flink-sql-connector-kafka-1.17.2.jar lib/
+
+# CMD ["sh", "-c", "jobmanager & sleep 30 && flink run -py app/deposit_pipeline.py"]
+CMD ["jobmanager"]
