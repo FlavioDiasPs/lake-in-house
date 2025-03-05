@@ -1,0 +1,48 @@
+CREATE TABLE raw_event_cdc_source (
+    op STRING,
+    ts_ms BIGINT, 
+    transaction STRING,
+    before MAP<STRING, STRING>,
+    after MAP<STRING, STRING>,
+    source MAP<STRING, STRING>,
+    ts AS TO_TIMESTAMP_LTZ(ts_ms, 3),
+    WATERMARK FOR ts AS ts - INTERVAL '10' SECONDS
+) 
+WITH(
+    'connector'='kafka',
+    'topic'='dbserver1.crypto.event',
+    'properties.bootstrap.servers'='kafka:29092', --kafka:29092, localhost:9092
+    'properties.group.id' = 'event_consumer_group', -- Set your Kafka consumer group ID here
+    'scan.startup.mode' = 'earliest-offset',
+    'format' = 'json'
+);
+
+CREATE TABLE raw_event_cdc_sink (
+    op STRING,
+    ts TIMESTAMP(3), 
+    transaction STRING,
+    before MAP<STRING, STRING>,
+    after MAP<STRING, STRING>,
+    source MAP<STRING, STRING>,    
+    ts_year INT,
+    ts_month INT,
+    ts_day INT
+) PARTITIONED BY (ts_year, ts_month, ts_day)
+WITH (
+    'connector' = 'filesystem',
+    'path' = 'output/event',
+    'format' = 'json'
+);
+
+INSERT INTO raw_event_cdc_sink
+SELECT 
+    op,
+    ts,
+    transaction,
+    before,
+    after,
+    source,    
+    CAST(EXTRACT(YEAR FROM ts) AS INT) AS ts_year,
+    CAST(EXTRACT(MONTH FROM ts) AS INT) AS ts_month,
+    CAST(EXTRACT(DAY FROM ts) AS INT) AS ts_day
+FROM raw_event_cdc_source

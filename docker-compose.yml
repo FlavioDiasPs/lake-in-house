@@ -4,13 +4,27 @@ services:
       context: .
       dockerfile: projects/csv-to-postgres-producer/Dockerfile
     image: csv-to-postgres-producer:0.1  
+    container_name: csv-to-postgres-producer
     depends_on:
       - postgres
     networks:
       - infra-net
 
+  # flink-pipelines:
+  #   build:
+  #     context: .
+  #     dockerfile: projects/flink-pipelines/Dockerfile
+  #   image: flink-pipelines:0.1  
+  #   depends_on:
+  #     - kafka-connect
+  #   networks:
+  #     - infra-net
+  #   volumes:
+  #     - raw_data:/app/flink-pipelines/raw_data
+
   pgadmin:
     image: dpage/pgadmin4
+    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: postgres@postgres.com
       PGADMIN_DEFAULT_PASSWORD: postgres
@@ -23,6 +37,7 @@ services:
 
   postgres:
     image: postgres:16
+    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -135,11 +150,14 @@ services:
     - kafka-ui-data:/tmp/hsperfdata_kafkaui
 
   flink-jobmanager:
+    build:
+      context: .
+      dockerfile: projects/flink-pipelines/Dockerfile_jobmanager
     image: apache/flink:1.17.1-scala_2.12
     container_name: flink-jobmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
-      - FLINK_JVM_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"  # Enable remote debugging
+      - FLINK_JVM_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"  # Enable remote debugging      
     ports:
       - "8081:8081"  # Flink Web UI
       - "5005:5005"  # Remote Debugging Port
@@ -152,36 +170,43 @@ services:
     restart: always
 
   flink-taskmanager:
+    build:
+      context: .
+      dockerfile: projects/flink-pipelines/Dockerfile_taskmanager
     image: apache/flink:1.17.1-scala_2.12
-    container_name: flink-taskmanager
     environment:
       - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
       - FLINK_JVM_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"  # Enable remote debugging
+      - TASK_MANAGER_NUMBER_OF_TASK_SLOTS=8
+    deploy:
+      replicas: 2 # Number of TaskManagers
     depends_on:
       - flink-jobmanager
     networks:
       - infra-net
     command: taskmanager
     restart: always
-      
-  zeppelin:
-    image: apache/zeppelin:0.10.1
-    container_name: zeppelin
-    ports:
-      - "8089:8080"  # Zeppelin Web UI    
-    environment:
-    - ZEPPELIN_ADDR=0.0.0.0
-    - ZEPPELIN_FLINK_JOBMANAGER_URL=flink-jobmanager:8081  # Flink JobManager REST endpoint URL
-    - ZEPPELIN_FLINK_EXECUTION_MODE=remote  # Execution mode set to remote
-    - ZEPPELIN_FLINK_EXECUTION_REMOTE_HOST=flink-jobmanager  # JobManager host
-    - ZEPPELIN_FLINK_EXECUTION_REMOTE_PORT=8081  # JobManager port    
-    - FLINK_HOME=/opt/flink
-    depends_on:
-      - flink-jobmanager
-    networks:
-      - infra-net
     volumes:
-      - zeppelin-data:/opt/zeppelin
+      - ./flink-pipeline-output:/opt/flink/output
+      
+  # zeppelin:
+  #   image: apache/zeppelin:0.10.1
+  #   container_name: zeppelin
+  #   ports:
+  #     - "8089:8080"  # Zeppelin Web UI    
+  #   environment:
+  #   - ZEPPELIN_ADDR=0.0.0.0
+  #   - ZEPPELIN_FLINK_JOBMANAGER_URL=flink-jobmanager:8081  # Flink JobManager REST endpoint URL
+  #   - ZEPPELIN_FLINK_EXECUTION_MODE=remote  # Execution mode set to remote
+  #   - ZEPPELIN_FLINK_EXECUTION_REMOTE_HOST=flink-jobmanager  # JobManager host
+  #   - ZEPPELIN_FLINK_EXECUTION_REMOTE_PORT=8081  # JobManager port    
+  #   - FLINK_HOME=/opt/flink
+  #   depends_on:
+  #     - flink-jobmanager
+  #   networks:
+  #     - infra-net
+  #   volumes:
+  #     - zeppelin-data:/opt/zeppelin
     
 
 volumes:
@@ -189,7 +214,7 @@ volumes:
   kafka-logs:
   kafka-ui-data:
   kafka-connect-data:
-  zeppelin-data:
+  # zeppelin-data:
 
 networks:
   infra-net:

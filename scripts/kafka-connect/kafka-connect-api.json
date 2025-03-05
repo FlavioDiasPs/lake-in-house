@@ -10,7 +10,7 @@
     "plugin.name": "pgoutput",
     "slot.name": "debezium_slot",
     "publication.name": "debezium_pub",
-    "table.include.list": "public.deposit_sample_data",
+    "table.include.list": "crypto.deposit,crypto.event,crypto.withdrawals,crypto.user_level",
     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
     "key.converter.schemas.enable": "false",
