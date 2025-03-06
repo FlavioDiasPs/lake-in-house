@@ -1,0 +1,18 @@
+SELECT ts, CURRENT_WATERMARK(ts) AS watermarkss
+FROM raw_deposit_cdc_source
+
+
+CREATE TABLE print_sink (
+    window_start TIMESTAMP(3),
+    window_end TIMESTAMP(3),
+    cnt BIGINT
+) WITH (
+    'connector' = 'print'
+);
+
+INSERT INTO print_sink
+SELECT window_start, window_end, COUNT(*)
+FROM TABLE(
+    TUMBLE(TABLE raw_deposit_cdc_source, DESCRIPTOR(ts), INTERVAL '10' SECOND)
+)
+GROUP BY window_start, window_end
