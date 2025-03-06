@@ -1,0 +1,4 @@
+docker exec flink-jobmanager flink run --detached -py app/user_level_pipeline.py                  
+docker exec flink-jobmanager flink run --detached -py app/deposit_pipeline.py   
+docker exec flink-jobmanager flink run --detached -py app/withdrawals_pipeline.py
+docker exec flink-jobmanager flink run --detached -py app/event_pipeline.py 

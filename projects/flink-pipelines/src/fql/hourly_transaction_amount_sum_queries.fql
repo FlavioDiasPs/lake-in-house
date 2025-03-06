@@ -1,0 +1,99 @@
+CREATE TABLE raw_withdrawals_cdc_source (
+    op STRING,
+    ts_ms BIGINT, 
+    transaction STRING,
+    before MAP<STRING, STRING>,
+    after MAP<STRING, STRING>,
+    source MAP<STRING, STRING>,
+    ts AS TO_TIMESTAMP(CAST( TO_TIMESTAMP_LTZ(ts_ms, 3) AS STRING)),  
+    WATERMARK FOR ts AS ts - INTERVAL '2' SECOND
+) 
+WITH(
+    'connector'='kafka',
+    'topic'='dbserver1.crypto.withdrawals',
+    'properties.bootstrap.servers'='localhost:9092', --kafka:29092, localhost:9092
+    'properties.group.id' = '1h_transaction_by_currency_sum_deposit', -- Set your Kafka consumer group ID here
+    'scan.startup.mode' = 'earliest-offset',
+    'format' = 'json'
+);
+
+CREATE TABLE raw_deposit_cdc_source (
+    op STRING,
+    ts_ms BIGINT, 
+    transaction STRING,
+    before MAP<STRING, STRING>,
+    after MAP<STRING, STRING>,
+    source MAP<STRING, STRING>,
+    ts AS TO_TIMESTAMP(CAST( TO_TIMESTAMP_LTZ(ts_ms, 3) AS STRING)),
+    WATERMARK FOR ts AS ts - INTERVAL '2' SECOND
+) 
+WITH(
+    'connector'='kafka',
+    'topic'='dbserver1.crypto.deposit',
+    'properties.bootstrap.servers'='localhost:9092', --kafka:29092, localhost:9092
+    'properties.group.id' = '1h_transaction_by_currency_sum_withdrawals', -- Set your Kafka consumer group ID here
+    'scan.startup.mode' = 'earliest-offset',
+    'format' = 'json'
+);
+
+
+CREATE TABLE hourly_transaction_by_currency_sum (
+    window_start TIMESTAMP,
+    window_end TIMESTAMP,
+    currency STRING,
+    transaction_type STRING,
+    hour_sum_amount DECIMAL(38, 18),
+    PRIMARY KEY (window_start, window_end, currency, transaction_type) NOT ENFORCED
+)
+WITH (
+    'connector' = 'jdbc',
+    'url' = 'jdbc:postgresql://localhost:5432/postgres',    
+    'table-name' = 'crypto.hourly_transaction_by_currency_sum',
+    'username' = 'postgres',
+    'password' = 'postgres',
+    'driver' = 'org.postgresql.Driver',
+    'sink.buffer-flush.interval' = '1s',  -- Optional, adjust based on your need
+    'sink.buffer-flush.max-rows' = '5000'  -- Optional, adjust based on your need
+);
+-- WITH(
+--     'connector' = 'print'
+-- )
+
+INSERT INTO hourly_transaction_by_currency_sum
+WITH withdrawals_windowed AS (
+    SELECT 
+        TUMBLE_START(ts, INTERVAL '10' MINUTE) AS window_start,
+        TUMBLE_END(ts, INTERVAL '10' MINUTE) AS window_end,
+        after['currency'] AS currency,
+        'withdrawal' AS transaction_type,
+        SUM(CAST(after['amount'] AS DECIMAL(38, 18))) AS hour_sum_amount
+    FROM raw_withdrawals_cdc_source
+    WHERE op = 'c'
+    GROUP BY TUMBLE(ts, INTERVAL '10' MINUTE), after['currency']
+), 
+deposit_windowed AS (
+    SELECT     
+        TUMBLE_START(ts, INTERVAL '10' MINUTE) AS window_start,
+        TUMBLE_END(ts, INTERVAL '10' MINUTE) AS window_end,
+        after['currency'] AS currency,
+        'deposit' AS transaction_type,    
+        SUM(CAST(after['amount'] AS DECIMAL(38, 18))) AS hour_sum_amount
+    FROM raw_deposit_cdc_source
+    WHERE op = 'c'
+    GROUP BY TUMBLE(ts, INTERVAL '10' MINUTE), after['currency']
+)
+SELECT
+    window_start,
+    window_end,
+    currency,
+    transaction_type,
+    hour_sum_amount
+FROM deposit_windowed
+UNION ALL
+SELECT
+    window_start,
+    window_end,
+    currency,
+    transaction_type,
+    hour_sum_amount
+FROM withdrawals_windowed
