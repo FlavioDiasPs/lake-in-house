@@ -6,21 +6,11 @@ os.environ["FLINK_ENV_JAVA_OPTS"] = (
 )
 
 flink_settings = EnvironmentSettings.in_streaming_mode()
-flink_settings.get_configuration().set_string(
-    "execution.checkpointing.interval", "10000"
-)  # 10 seconds interval
-flink_settings.get_configuration().set_string(
-    "execution.checkpointing.mode", "EXACTLY_ONCE"
-)
-flink_settings.get_configuration().set_string(
-    "execution.checkpointing.timeout", "10000"
-)  # 10 seconds timeout
-flink_settings.get_configuration().set_string(
-    "execution.checkpointing.max-concurrent", "1"
-)
-flink_settings.get_configuration().set_string(
-    "parallelism.default", "1"
-)  # Set parallelism to 1
+flink_settings.get_configuration().set_string("execution.checkpointing.interval", "10000")  # 10 seconds interval
+flink_settings.get_configuration().set_string("execution.checkpointing.mode", "EXACTLY_ONCE")
+flink_settings.get_configuration().set_string("execution.checkpointing.timeout", "10000")  # 10 seconds timeout
+flink_settings.get_configuration().set_string("execution.checkpointing.max-concurrent", "1")
+flink_settings.get_configuration().set_string("parallelism.default", "1")  # Set parallelism to 1
 t_env = StreamTableEnvironment.create(environment_settings=flink_settings)
 
 workspace_path = os.path.abspath(os.path.dirname(__file__))
