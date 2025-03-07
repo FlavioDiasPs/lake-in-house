@@ -1,0 +1,13 @@
+# The main pipeline for dbricks_dlt_medallion
+resources:
+  pipelines:
+    dbricks_dlt_medallion_pipeline:
+      name: dbricks_dlt_medallion_pipeline
+      catalog: prd
+      target: dbricks_dlt_medallion_${bundle.target}
+      libraries:
+        - notebook:
+            path: ../src/dlt_pipeline.ipynb
+
+      configuration:
+        bundle.sourcePath: ${workspace.file_path}/src

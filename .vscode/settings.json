@@ -9,6 +9,19 @@
             "database": "postgres",
             "username": "postgres",
             "password": "postgres"
+        },
+        {
+            "connectionMethod": "Hostname and Token",
+            "catalog": "lab",
+            "previewLimit": 50,
+            "driver": "Databricks",
+            "name": "databricks_small_serverless",
+            "host": "adb-1431854005997414.14.azuredatabricks.net",
+            "path": "/sql/1.0/warehouses/af0a3a33d1f1a643"
         }
-    ]
+    ],
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportUnknownMemberType": "none",
+        "reportUnknownVariableType": "none"
+    }
 }

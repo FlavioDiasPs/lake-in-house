@@ -7,7 +7,9 @@ os.environ["FLINK_ENV_JAVA_OPTS"] = (
 )
 
 
-engine = create_engine("postgresql://postgres:postgres@host.docker.internal:5432/postgres")
+engine = create_engine(
+    "postgresql://postgres:postgres@host.docker.internal:5432/postgres"
+)
 with engine.connect() as conn:
     conn.execute(
         text("""
@@ -24,7 +26,9 @@ with engine.connect() as conn:
 # Create Table Environment (pure Table API, no DataStream API)
 env_settings = EnvironmentSettings.in_streaming_mode()
 table_env = TableEnvironment.create(env_settings)
-table_env.get_config().get_configuration().set_string("table.exec.source.idle-timeout", "1000")
+table_env.get_config().get_configuration().set_string(
+    "table.exec.source.idle-timeout", "1000"
+)
 
 print("Starting")
 

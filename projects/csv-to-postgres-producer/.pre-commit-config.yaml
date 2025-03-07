@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.6.4
+    hooks:
+      - id: uv-lock
+        files: ^projects/csv-to-postgres-producer/
+        args: ["--directory", "projects/csv-to-postgres-producer"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^projects/csv-to-postgres-producer/
+      - id: ruff-format
+        files: ^projects/csv-to-postgres-producer/
+
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^projects/csv-to-postgres-producer/
+        args: ["projects/csv-to-postgres-producer/tests"]

@@ -37,13 +37,17 @@ def process_json(json_string: str) -> dict:
 
     # Validate and cast amount to Decimal
     try:
-        if amount_str is None or not amount_str.strip():  # Check for None or empty string
+        if (
+            amount_str is None or not amount_str.strip()
+        ):  # Check for None or empty string
             amount = Decimal("0")
         else:
             amount = Decimal(amount_str.strip())  # Strip whitespace and cast
     except Exception as e:
         # Handle invalid decimal (e.g., "abc", "", None after strip)
-        print(f"Warning: Failed to cast amount '{amount_str}' to Decimal: {str(e)}. Using 0.")
+        print(
+            f"Warning: Failed to cast amount '{amount_str}' to Decimal: {str(e)}. Using 0."
+        )
         amount = Decimal("0")
 
     return {"user_id": user_id, "amount": amount, "currency": currency}
@@ -68,10 +72,14 @@ def run_csv_job():
     csv_format = CsvReaderFormat.for_schema(csv_schema)
     csv_source = FileSource.for_record_stream_format(csv_format, file_path).build()
     csv_stream: DataStream = env.from_source(
-        csv_source, watermark_strategy=WatermarkStrategy.no_watermarks(), source_name="csv_deposit_sample_data"
+        csv_source,
+        watermark_strategy=WatermarkStrategy.no_watermarks(),
+        source_name="csv_deposit_sample_data",
     )
 
-    json_stream = csv_stream.map(simulate_json_stream, output_type=Types.STRING())  # Ensure string output
+    json_stream = csv_stream.map(
+        simulate_json_stream, output_type=Types.STRING()
+    )  # Ensure string output
     processed_stream: DataStream = json_stream.map(process_json)
 
     # Perform aggregation by user_id and currency (using reduce to avoid partial results)
