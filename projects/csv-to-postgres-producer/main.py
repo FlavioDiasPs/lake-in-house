@@ -34,9 +34,7 @@ def create_duckdb_connection() -> DuckDBPyConnection:
 
 
 def create_postgres_engine() -> Engine:
-    return create_engine(
-        "postgresql://postgres:postgres@host.docker.internal:5432/postgres"
-    )
+    return create_engine("postgresql://postgres:postgres@host.docker.internal:5432/postgres")
 
 
 def convert_schema_to_postgres(schema: DuckDBPyRelation) -> str:
@@ -88,9 +86,7 @@ def setup_postgres_and_workload() -> List[Workload]:
             conn.execute(text(create_table_query))
             conn.commit()
 
-            df: pd.DataFrame = pd.read_csv(workload["path"]).sort_values(
-                by="event_timestamp", ascending=True
-            )
+            df: pd.DataFrame = pd.read_csv(workload["path"]).sort_values(by="event_timestamp", ascending=True)
             count: int = len(df)
 
             full_workload: Workload = {
@@ -115,9 +111,7 @@ def merge_data(workload: Workload) -> None:
     columns: List[str] = df.columns.tolist()
     columns_str: str = ", ".join(columns)
     values_str: str = ", ".join([f"%({col})s" for col in columns])
-    update_str: str = ", ".join(
-        [f"{col} = EXCLUDED.{col}" for col in columns if col != workload["pk"]]
-    )
+    update_str: str = ", ".join([f"{col} = EXCLUDED.{col}" for col in columns if col != workload["pk"]])
 
     insert_query = text(
         f"INSERT INTO crypto.{workload['table_name']} ({columns_str}) "
@@ -140,9 +134,7 @@ def stream_all_data_workloads(workloads: List[Workload]) -> None:
             if workload["current_row"] < workload["count"]:
                 current_row: int = workload["current_row"]
                 end_row: int = min(current_row + speed, workload["count"])
-                workload["selected_rows"] = (
-                    workload["df"].iloc[current_row:end_row].copy()
-                )
+                workload["selected_rows"] = workload["df"].iloc[current_row:end_row].copy()
 
                 print(f"Merging on {workload['table_name']}")
                 merge_data(workload)
