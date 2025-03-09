@@ -14,6 +14,13 @@
             "request": "launch",
             "program": "${file}",
             "python": "${workspaceFolder}/projects/flink-pipelines/.venv/scripts/python"
+        },
+        {
+            "name": "crypto-dlt",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "python": "${workspaceFolder}/projects/crypto-dlt/.venv/scripts/python"
         }
     ]
 }

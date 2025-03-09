@@ -10,11 +10,11 @@
 - **Pipeline Owner:**  
   Flaviodiasps@gmail.com
 - **Sponsor:**  
-  Flavio - Director of this github repository  
+  Flavio - Director of this GitHub repository  
 - **Start Date:**  
   February 21, 2025  
 - **Due Date:**  
-  March 14, 2025 (I gave me a 3-week timeline)  
+  March 14, 2025 (I gave myself a 3-week timeline)  
 
 ## Scope
 
@@ -27,7 +27,7 @@
     |amount|Float|Transaction amount|
 
 - **Out-of-Scope:**  
-  - Business questions and assumptions not addressed, I will add it after I analyse the data 
+  - Business questions and assumptions not addressed, I will add them after I analyze the data 
 
 ### Architecture Scope
 - **In-Scope:**  
@@ -39,7 +39,7 @@
       - Aggregate JSONs and ingest into PostgreSQL (Docker).  
       - Create a visualization in Grafana (Docker).  
     - **Batch (Merge):**  
-      - Aggregate JSONs using Flink and store on a local Docker volume as array of jsons.  
+      - Aggregate JSONs using Flink and store on a local Docker volume as an array of JSONs.  
       - Manually upload data to Azure Data Lake Storage Gen2 (ADLS2).  
       - Build Databricks Delta Live Tables (DLT) pipelines for bronze, silver, and gold tables.  
   - **Version Control:** All code will be tracked in this public GitHub repository.  
@@ -98,3 +98,33 @@
 ## Support
 - **Documentation:**  
   - This right here, is the doc
+
+## Project Structure
+
+### Dockerfiles
+- **/Dockerfile:**  
+  Dockerfile for setting up the Debezium Connect base image with the PostgreSQL connector plugin.
+- **/src/csv-to-postgres-producer/Dockerfile:**  
+  Dockerfile for setting up the CSV to PostgreSQL producer application.
+
+### Docker Compose
+- **/docker-compose.yml:**  
+  Docker Compose file for setting up the entire infrastructure including PostgreSQL, Kafka, Kafka Connect, and other services.
+
+### Python Scripts
+- **/src/main.py:**  
+  Main entry point for the application.
+- **/src/csv-to-postgres-producer/main.py:**  
+  Script for streaming data from CSV files to PostgreSQL.
+
+### Configuration Files
+- **/.gitignore:**  
+  Git ignore file to exclude unnecessary files from version control.
+- **/.dockerignore:**  
+  Docker ignore file to exclude unnecessary files from Docker builds.
+- **/pyproject.toml:**  
+  Configuration file for managing Python project dependencies.
+
+### Documentation
+- **/README.md:**  
+  This documentation file.
