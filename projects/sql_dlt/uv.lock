@@ -82,7 +82,7 @@ wheels = [
 ]
 
 [[package]]
-name = "crypto-dlt"
+name = "crypto-dlt-sql"
 version = "0.1.0"
 source = { virtual = "." }
 
