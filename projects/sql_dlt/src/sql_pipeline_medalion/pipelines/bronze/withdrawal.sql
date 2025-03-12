@@ -1,5 +1,5 @@
 -- Define the bronze layer table for raw transaction data
-CREATE OR REPLACE STREAMING TABLE lab.bronze.deposit
+CREATE OR REPLACE STREAMING TABLE withdrawal_pipeline
 (
   date_partition DATE COMMENT 'The computed date to use as partition on the storage',
   ts_source_stream TIMESTAMP COMMENT 'Timestamp when the change was captured by the Flink CDC pipeline',
@@ -9,7 +9,9 @@ CREATE OR REPLACE STREAMING TABLE lab.bronze.deposit
   transaction STRING COMMENT 'Unique transaction identifier from the source system',
   before VARIANT COMMENT 'Pre-operation state of the transaction',
   after VARIANT COMMENT 'Post-operation state of the transaction',
-  source VARIANT COMMENT 'Metadata about the ingestion process and source system'
+  source VARIANT COMMENT 'Metadata about the ingestion process and source system',
+  CONSTRAINT is_not_null EXPECT(date_partition is not null AND ts_source_stream is not null AND op is not null) ON VIOLATION FAIL UPDATE,
+  CONSTRAINT has_valid_cdc_op EXPECT(op in ('r', 'c', 'u', 'd'))
 )
 TBLPROPERTIES('delta.feature.variantType-preview' = 'supported')
 CLUSTER BY (date_partition, op)
@@ -25,7 +27,8 @@ SELECT
   PARSE_JSON(CAST(after AS STRING)) AS after,
   PARSE_JSON(source) AS source
 FROM STREAM read_files(
-    'abfss://lab@dlsdmvprd.dfs.core.windows.net/landing/deposit/**',
+    'abfss://lab@dlsdmvprd.dfs.core.windows.net/landing/withdrawals/**',
     format => 'json',
     schema => 'op STRING, ts STRING, transaction STRING, before STRING, after STRING, source STRING'
-  )
+  );
+

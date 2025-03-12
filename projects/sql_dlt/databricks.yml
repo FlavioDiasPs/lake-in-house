@@ -1,11 +1,11 @@
 # This is a Databricks asset bundle definition for crypto_dlt.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
-  name: crypto_dlt
+  name: bundle_lab
   uuid: d8c446ac-142b-4211-98a4-75c33ea09c8b
 
 include:
-  - resources/*/*.yml
+  - src/**/**/*.yml
 
 # Variable declarations. These variables are assigned in the dev/prod targets below.
 variables:
@@ -13,8 +13,6 @@ variables:
     description: The warehouse to use
   catalog:
     description: The catalog to use
-  schema:
-    description: The schema to use
 
 targets:
   dev:
@@ -29,7 +27,6 @@ targets:
     variables:
       warehouse_id: af0a3a33d1f1a643
       catalog: lab
-      schema: landing
 
   prod:
     mode: production
@@ -40,7 +37,6 @@ targets:
     variables:
       warehouse_id: af0a3a33d1f1a643
       catalog: lab
-      schema: landing
     permissions:
       - user_name: flavio.silva@clear.sale
         level: CAN_MANAGE
