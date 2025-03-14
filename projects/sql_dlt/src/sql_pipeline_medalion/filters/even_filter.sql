@@ -1,5 +1,2 @@
-USE CATALOG LAB;
-USE SCHEMA GOLD;
-
-CREATE OR REPLACE FUNCTION even_filter(id float)
-RETURN IF(current_user() = 'flavio.silva@clear.sale', true, id % 2 = 0);
+CREATE OR REPLACE FUNCTION lab.filters.even_filter(id float)
+RETURN IF(current_user() = 'fake-email@fake.com', true, id % 2 = 0);
