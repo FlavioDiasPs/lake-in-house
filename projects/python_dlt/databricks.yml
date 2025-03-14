@@ -1,22 +1,11 @@
-# This is a Databricks asset bundle definition for crypto_dlt.
+# This is a Databricks asset bundle definition for python_dlt.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
-  name: bundle_lab
-  uuid: d8c446ac-142b-4211-98a4-75c33ea09c8b
+  name: python_dlt
+  uuid: 375d66d4-6075-438f-aed4-ea705a8acfd9
 
 include:
-  - src/**/**/*.yml
-
-# Variable declarations. These variables are assigned in the dev/prod targets below.
-variables:
-  warehouse_id:
-    description: The warehouse to use
-  catalog:
-    description: The catalog to use
-  pool_workers:
-    description: "the pool it is going to use for workers if it is the case"
-  pool_drivers:
-    description: "the pool it is going to use for drivers if it is the case"
+  - resources/*.yml
 
 targets:
   dev:
@@ -28,11 +17,6 @@ targets:
     default: true
     workspace:
       host: https://adb-1431854005997414.14.azuredatabricks.net
-    variables:
-      warehouse_id: af0a3a33d1f1a643
-      pool_workers: 0311-222526-molt15-pool-alh24srl
-      pool_drivers: 0312-142348-shop7-pool-kso66xeo
-      catalog: lab
 
   prod:
     mode: production
@@ -40,9 +24,6 @@ targets:
       host: https://adb-1431854005997414.14.azuredatabricks.net
       # We explicitly deploy to /Workspace/Users/flavio.silva@clear.sale to make sure we only have a single copy.
       root_path: /Workspace/Users/flavio.silva@clear.sale/.bundle/${bundle.name}/${bundle.target}
-    variables:
-      warehouse_id: af0a3a33d1f1a643
-      catalog: lab
     permissions:
       - user_name: flavio.silva@clear.sale
         level: CAN_MANAGE

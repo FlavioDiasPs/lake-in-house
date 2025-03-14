@@ -1,65 +1,21 @@
 resources:
   pipelines:
-    bronze_pipeline:
-      name: bronze_pipeline
+    sql_pipeline:
+      name: sql_pipeline
       clusters:
         - label: default
-          instance_pool_id: 0311-222526-molt15-pool-alh24srl
-          driver_instance_pool_id: 0311-230139-geek11-pool-somvk3mo
+          instance_pool_id: ${var.pool_workers}
+          driver_instance_pool_id: ${var.pool_drivers}
       notifications:
         - email_recipients:
             - flavio.silva@clear.sale
           alerts:
             - on-update-failure
-      target: bronze
+      schema: default
       catalog: ${var.catalog}
       photon: false
       channel: CURRENT
       continuous: false
       libraries:
         - file:
-            path: ../pipelines/bronze/deposit.sql
-        - file:
-            path: ../pipelines/bronze/withdrawal.sql
-
-    silver_pipeline:
-      name: silver_pipeline
-      clusters:
-        - label: default
-          instance_pool_id: 0311-222526-molt15-pool-alh24srl
-          driver_instance_pool_id: 0311-230139-geek11-pool-somvk3mo
-      notifications:
-        - email_recipients:
-            - flavio.silva@clear.sale
-          alerts:
-            - on-update-failure
-      target: silver
-      catalog: ${var.catalog}
-      photon: false
-      channel: CURRENT
-      continuous: false
-      libraries:
-        - file:
-            path: ../pipelines/silver/deposit.sql
-        - file:
-            path: ../pipelines/silver/withdrawal.sql
-
-    gold_pipeline:
-      name: gold_pipeline
-      clusters:
-        - label: default
-          instance_pool_id: 0311-222526-molt15-pool-alh24srl
-          driver_instance_pool_id: 0311-230139-geek11-pool-somvk3mo
-      notifications:
-        - email_recipients:
-            - flavio.silva@clear.sale
-          alerts:
-            - on-update-failure
-      target: gold
-      catalog: ${var.catalog}
-      photon: false
-      channel: CURRENT
-      continuous: false
-      libraries:
-        - file:
-            path: ../pipelines/gold/fct_transaction.sql
+            path: ../pipelines/*/*.sql

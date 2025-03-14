@@ -10,18 +10,6 @@ services:
     networks:
       - infra-net
 
-  # flink-pipelines:
-  #   build:
-  #     context: .
-  #     dockerfile: projects/flink-pipelines/Dockerfile
-  #   image: flink-pipelines:0.1  
-  #   depends_on:
-  #     - kafka-connect
-  #   networks:
-  #     - infra-net
-  #   volumes:
-  #     - raw_data:/app/flink-pipelines/raw_data
-
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
