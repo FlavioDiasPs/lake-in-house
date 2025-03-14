@@ -6,7 +6,7 @@ CREATE OR REFRESH MATERIALIZED VIEW vw_fct_transaction_pipeline
   id FLOAT                                            COMMENT 'Unique monotonicaly increasing primary key of deposit table',
   amount DECIMAL(38,18)                               COMMENT 'The value deposited',
   user_id STRING                                      COMMENT 'The Id of the user in the app',
-  currency STRING MASK lab.filters.currency_mask      COMMENT 'The currency string of the value deposited',
+  currency STRING MASK lab.filters.currency_mask      COMMENT 'The currency string of the value deposited', --column mask https://docs.databricks.com/aws/en/tables/row-and-column-filters
   ts_event TIMESTAMP                                  COMMENT 'The time which the deposit happenned',
   tx_status STRING                                    COMMENT 'The status of the transaction (complete, failed)',
   interface STRING                                    COMMENT 'The place where the transaction was made',
