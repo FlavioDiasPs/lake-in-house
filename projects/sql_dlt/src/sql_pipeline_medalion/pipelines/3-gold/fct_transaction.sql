@@ -1,5 +1,5 @@
--- Define the bronze layer table for raw transaction data
-CREATE OR REPLACE MATERIALIZED VIEW fct_transaction
+USE SCHEMA gold;
+CREATE OR REFRESH MATERIALIZED VIEW fct_transaction_pipeline
 (
   date_partition DATE                 COMMENT 'The computed date to use as partition on the storage',
   id FLOAT                           COMMENT 'Unique monotonicaly increasing primary key of deposit table',
@@ -21,12 +21,16 @@ CREATE OR REPLACE MATERIALIZED VIEW fct_transaction
       AND tx_status is not null
       AND transaction_type is not null
   ) ON VIOLATION FAIL UPDATE,
-  CONSTRAINT has_valid_amount EXPECT(amount >= 0),
+  CONSTRAINT has_valid_amount EXPECT(amount >= 0) ON VIOLATION FAIL UPDATE,
   CONSTRAINT has_valid_tx_status EXPECT (tx_status IN ('complete', 'failed'))
 )
 TBLPROPERTIES(
   'delta.feature.variantType-preview' = 'supported',
-  'delta.enableChangeDataFeed' = 'true'
+  'delta.enableChangeDataFeed' = 'true',  
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true',
+  'tag.project' = 'lab',
+  'tag.layer' = 'gold'
 )
 CLUSTER BY (date_partition, currency, transaction_type) 
 AS
@@ -52,4 +56,4 @@ SELECT
   tx_status,
   interface,
   'withdrawal' AS transaction_type
-FROM lab.silver.withdrawal_pipeline
+FROM lab.silver.withdrawal_pipeline;

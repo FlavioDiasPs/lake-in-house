@@ -25,6 +25,7 @@ resources:
             warehouse_id: ${var.warehouse_id}
             file:
               path: ../jobs/bronze/deposit.sql
+              
         - task_key: bronze_withdrawal
           sql_task:
             warehouse_id: ${var.warehouse_id}

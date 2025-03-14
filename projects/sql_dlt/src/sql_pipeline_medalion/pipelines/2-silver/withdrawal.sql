@@ -1,4 +1,5 @@
-CREATE OR REPLACE MATERIALIZED VIEW withdrawal_pipeline
+USE SCHEMA silver;
+CREATE OR REFRESH STREAMING TABLE withdrawal_pipeline
 (
   date_partition DATE                     COMMENT 'The computed date to use as partition on the storage',
   ts_silver_process_started TIMESTAMP     COMMENT 'Timestamp when the bronze process started',
@@ -25,36 +26,39 @@ CREATE OR REPLACE MATERIALIZED VIEW withdrawal_pipeline
     AND ts_event is not null
     AND tx_status is not null
   ) ON VIOLATION FAIL UPDATE,
-  CONSTRAINT has_valid_amount EXPECT(amount >= 0),
-  CONSTRAINT has_valid_cdc_operation_type EXPECT(operation_type in ('INSERT', 'UPDATE', 'DELETE')),
-  CONSTRAINT has_valid_interface EXPECT (interface IN ('app', 'web')),
-  CONSTRAINT has_valid_tx_status EXPECT (tx_status IN ('complete', 'failed'))
+  CONSTRAINT has_valid_amount EXPECT(amount >= 0) ON VIOLATION DROP ROW,
+  CONSTRAINT has_valid_cdc_operation_type EXPECT(operation_type in ('INSERT', 'UPDATE', 'DELETE')) ON VIOLATION FAIL UPDATE,
+  CONSTRAINT has_valid_interface EXPECT (interface IN ('app', 'web')) ON VIOLATION FAIL UPDATE,
+  CONSTRAINT has_valid_tx_status EXPECT (tx_status IN ('complete', 'failed')) ON VIOLATION FAIL UPDATE
 )
 TBLPROPERTIES(
   'delta.feature.variantType-preview' = 'supported',
-  'delta.enableChangeDataFeed' = 'true'
+  'delta.enableChangeDataFeed' = 'true',  
+  'delta.autoOptimize.optimizeWrite' = 'true',
+  'delta.autoOptimize.autoCompact' = 'true',
+  'tag.project' = 'lab',
+  'tag.layer' = 'silver'
 )
 CLUSTER BY (date_partition, operation_type)
 AS
 SELECT 
-  date_partition,  
   current_timestamp() AS ts_silver_process_started,
   uuid() AS batch_id,
-  CASE 
-    WHEN op IN ('c', 'r') THEN 'INSERT'
-    WHEN op IN ('d') THEN 'DELETE'
-    WHEN op IN ('u') THEN 'UPDATE' 
-    ELSE op END AS operation_type,
-  after:id::float AS id,    
-  after:amount::DECIMAL(38, 18) AS amount,
-  after:user_id::STRING AS user_id,
-  after:interface::STRING AS interface,
-  after:currency::STRING AS currency,
-  after:event_timestamp::TIMESTAMP AS ts_event,
-  after:tx_status::STRING AS tx_status
+  *
 FROM (
-  SELECT *,
-    ROW_NUMBER() OVER(PARTITION BY after:id::float order by after:id::float) AS row_n
-    FROM lab.bronze.withdrawal
-) AS dedup
-WHERE row_n = 1;
+  SELECT DISTINCT
+    date_partition,    
+    CASE 
+      WHEN op IN ('c', 'r') THEN 'INSERT'
+      WHEN op IN ('d') THEN 'DELETE'
+      WHEN op IN ('u') THEN 'UPDATE' 
+      ELSE op END AS operation_type,
+    CAST(after['id'] AS float) AS id,    
+    CAST(after['amount'] AS DECIMAL(38, 18)) AS amount,
+    CAST(after['user_id'] AS STRING) AS user_id,
+    CAST(after['interface'] AS STRING) AS interface,
+    CAST(after['currency'] AS STRING) AS currency,
+    CAST(after['event_timestamp'] AS TIMESTAMP) AS ts_event,
+    CAST(after['tx_status'] AS STRING) AS tx_status
+  FROM STREAM(lab.bronze.withdrawal_pipeline)
+);
