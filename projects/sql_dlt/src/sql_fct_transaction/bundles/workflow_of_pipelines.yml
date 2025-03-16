@@ -5,4 +5,4 @@ resources:
       tasks:
         - task_key: run_sql_pipeline
           pipeline_task:
-            pipeline_id: ${resources.pipelines.sql_pipeline.id}
+            pipeline_id: ${resources.pipelines.sql_fct_transaction.id}

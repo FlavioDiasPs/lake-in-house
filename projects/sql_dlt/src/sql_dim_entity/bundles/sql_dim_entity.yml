@@ -1,0 +1,21 @@
+resources:
+  pipelines:
+    sql_dim_entity:
+      name: sql_dim_entity
+      clusters:
+        - label: default
+          instance_pool_id: ${var.pool_workers}
+          driver_instance_pool_id: ${var.pool_drivers}
+      # notifications:
+      #   - email_recipients:
+      #       - flavio.silva@clear.sale
+      #     alerts:
+      #       - on-update-failure
+      schema: default
+      catalog: ${var.catalog}
+      photon: false
+      channel: CURRENT
+      continuous: true
+      libraries:
+        - file:
+            path: ../pipelines/*/*.sql

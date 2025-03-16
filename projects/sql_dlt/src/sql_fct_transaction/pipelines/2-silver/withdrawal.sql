@@ -1,10 +1,11 @@
 USE SCHEMA silver;
 CREATE OR REFRESH STREAMING TABLE withdrawal_pipeline
 (
+  _ts_silver_started TIMESTAMP            COMMENT 'Timestamp when the bronze process started',
+  _batch_id STRING                        COMMENT 'Unique identifier for the ingestion batch',
+  _cdc_operation STRING                   COMMENT 'Operation type (e.g., INSERT, UPDATE, DELETE) from the source system',
+  _sequence BIGINT                        COMMENT 'Sequence number from Postgres Wal to give us event ordering',
   date_partition DATE                     COMMENT 'The computed date to use as partition on the storage',
-  ts_silver_process_started TIMESTAMP     COMMENT 'Timestamp when the bronze process started',
-  batch_id STRING                         COMMENT 'Unique identifier for the silver ingestion batch',
-  operation_type STRING                   COMMENT 'Operation type (e.g., INSERT, UPDATE, DELETE) from the source system',
   id FLOAT                                COMMENT 'Unique monotonicaly increasing primary key of withdrawal table',
   amount DECIMAL(38, 18)                  COMMENT 'The value withdrawn',
   user_id STRING                          COMMENT 'The Id of the user in the app',
@@ -14,10 +15,11 @@ CREATE OR REFRESH STREAMING TABLE withdrawal_pipeline
   tx_status STRING                        COMMENT 'The status of the transaction (complete, failed)',
 
   CONSTRAINT is_not_null EXPECT(
-    date_partition is not null 
-    AND ts_silver_process_started is not null 
-    AND batch_id is not null
-    AND operation_type is not null
+    _ts_silver_started is not null
+    AND _batch_id is not null
+    AND _cdc_operation is not null
+    AND _sequence is not null
+    AND date_partition is not null 
     AND id is not null
     AND amount is not null
     AND user_id is not null
@@ -27,7 +29,7 @@ CREATE OR REFRESH STREAMING TABLE withdrawal_pipeline
     AND tx_status is not null
   ) ON VIOLATION FAIL UPDATE,
   CONSTRAINT has_valid_amount EXPECT(amount >= 0) ON VIOLATION DROP ROW,
-  CONSTRAINT has_valid_cdc_operation_type EXPECT(operation_type in ('INSERT', 'UPDATE', 'DELETE')) ON VIOLATION FAIL UPDATE,
+  CONSTRAINT has_valid_cdc_operation EXPECT(_cdc_operation in ('INSERT', 'UPDATE', 'DELETE')) ON VIOLATION FAIL UPDATE,
   CONSTRAINT has_valid_interface EXPECT (interface IN ('app', 'web')) ON VIOLATION FAIL UPDATE,
   CONSTRAINT has_valid_tx_status EXPECT (tx_status IN ('complete', 'failed')) ON VIOLATION FAIL UPDATE
 )
@@ -39,11 +41,11 @@ TBLPROPERTIES(
   'tag.project' = 'lab',
   'tag.layer' = 'silver'
 )
-CLUSTER BY (date_partition, operation_type)
+CLUSTER BY (date_partition, _cdc_operation)
 AS
 SELECT 
-  current_timestamp() AS ts_silver_process_started,
-  uuid() AS batch_id,
+  current_timestamp() AS _ts_silver_started,
+  uuid() AS _batch_id,
   *
 FROM (
   SELECT DISTINCT
@@ -52,7 +54,8 @@ FROM (
       WHEN op IN ('c', 'r') THEN 'INSERT'
       WHEN op IN ('d') THEN 'DELETE'
       WHEN op IN ('u') THEN 'UPDATE' 
-      ELSE op END AS operation_type,
+      ELSE op END AS _cdc_operation,
+    CAST(source['lsn'] AS BIGINT) AS _sequence,    
     CAST(after['id'] AS float) AS id,    
     CAST(after['amount'] AS DECIMAL(38, 18)) AS amount,
     CAST(after['user_id'] AS STRING) AS user_id,

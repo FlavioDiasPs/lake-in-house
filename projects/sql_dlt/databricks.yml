@@ -42,7 +42,7 @@ targets:
       root_path: /Workspace/Users/flavio.silva@clear.sale/.bundle/${bundle.name}/${bundle.target}
     variables:
       warehouse_id: af0a3a33d1f1a643
-      catalog: lab
+      catalog: lab_prod
     permissions:
       - user_name: flavio.silva@clear.sale
         level: CAN_MANAGE

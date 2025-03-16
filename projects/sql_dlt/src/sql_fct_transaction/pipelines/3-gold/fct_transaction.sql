@@ -2,7 +2,7 @@ USE SCHEMA gold;
 CREATE OR REFRESH MATERIALIZED VIEW fct_transaction_pipeline
 (
   date_partition DATE                 COMMENT 'The computed date to use as partition on the storage',
-  id FLOAT                           COMMENT 'Unique monotonicaly increasing primary key of deposit table',
+  id FLOAT                            COMMENT 'Unique monotonicaly increasing primary key of deposit table',
   amount DECIMAL(38,18)               COMMENT 'The value deposited',
   user_id STRING                      COMMENT 'The Id of the user in the app',
   currency STRING                     COMMENT 'The currency string of the value deposited',

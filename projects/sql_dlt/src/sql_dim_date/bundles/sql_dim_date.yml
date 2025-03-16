@@ -1,21 +1,21 @@
 resources:
   pipelines:
-    sql_pipeline:
-      name: sql_pipeline
+    sql_dim_date:
+      name: sql_dim_date
       clusters:
         - label: default
           instance_pool_id: ${var.pool_workers}
           driver_instance_pool_id: ${var.pool_drivers}
-      notifications:
-        - email_recipients:
-            - flavio.silva@clear.sale
-          alerts:
-            - on-update-failure
+      # notifications:
+      #   - email_recipients:
+      #       - flavio.silva@clear.sale
+      #     alerts:
+      #       - on-update-failure
       schema: default
       catalog: ${var.catalog}
       photon: false
       channel: CURRENT
-      continuous: false
+      continuous: true
       libraries:
         - file:
             path: ../pipelines/*/*.sql
