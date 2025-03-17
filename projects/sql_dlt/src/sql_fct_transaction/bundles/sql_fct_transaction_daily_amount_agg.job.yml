@@ -39,9 +39,5 @@ resources:
           depends_on:
             - task_key: check_if_timeframe_condition
               outcome: "true"
-          sql_task:
-            warehouse_id: ${var.warehouse_id}
-            file:
-              source: "WORKSPACE" # Specify source as WORKSPACE
-              path: "../pipelines/4-platinum/fct_transaction_pipeline_daily_amount_agg.sql" # Full workspace path
-          run_if: "ALL_SUCCESS"
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.fct_transaction_pipeline_daily_amount_agg.id}

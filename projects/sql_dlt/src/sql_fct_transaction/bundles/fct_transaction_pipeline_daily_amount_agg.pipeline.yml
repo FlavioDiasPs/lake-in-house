@@ -1,7 +1,7 @@
 resources:
   pipelines:
-    sql_fct_transaction:
-      name: sql_fct_transaction
+    fct_transaction_pipeline_daily_amount_agg:
+      name: fct_transaction_pipeline_daily_amount_agg
       clusters:
         - label: default
           instance_pool_id: ${var.pool_workers}
@@ -18,8 +18,4 @@ resources:
       continuous: false
       libraries:
         - file:
-            path: ../pipelines/1-bronze/*.sql
-        - file:
-            path: ../pipelines/2-silver/*.sql
-        - file:
-            path: ../pipelines/3-gold/*.sql
+            path: ../pipelines/4-platinum/fct_transaction_pipeline_daily_amount_agg.sql

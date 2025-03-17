@@ -1,6 +1,6 @@
 USE SCHEMA GOLD;
 
-CREATE OR REFRESH MATERIALIZED VIEW fct_transaction_pipeline_daily_amount_agg
+CREATE OR REPLACE MATERIALIZED VIEW fct_transaction_pipeline_monthly_amount_agg
 (
   date_partition DATE                                 COMMENT 'The computed date to use as partition on the storage',
   amount_sum DECIMAL(38,18)                           COMMENT 'The value deposited',
@@ -18,6 +18,3 @@ SELECT
 FROM lab.gold.fct_transaction_pipeline
 WHERE tx_status = 'complete' --and date_add(date_partition, -1) removed because this is a simulation and I don't have yesterday data
 GROUP BY date_partition, user_id, currency, transaction_type
-
-
-
