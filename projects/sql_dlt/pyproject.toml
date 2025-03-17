@@ -1,14 +1,16 @@
 [project]
-name = "crypto-dlt_sql"
+name = "sql_dlt"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "databricks-dlt>=0.3.0",
+    "pyspark>=3.5.5",
+]
 
 [dependency-groups]
 dev = [
-    "databricks-dlt>=0.3.0",
     "pip>=25.0.1",
     "pytest>=8.3.5",
     "ruff>=0.9.10",

@@ -1,8 +1,0 @@
-resources:
-  jobs:
-    sql_workflow_of_pipelines:
-      name: sql_workflow_of_pipelines
-      tasks:
-        - task_key: run_sql_pipeline
-          pipeline_task:
-            pipeline_id: ${resources.pipelines.sql_fct_transaction.id}

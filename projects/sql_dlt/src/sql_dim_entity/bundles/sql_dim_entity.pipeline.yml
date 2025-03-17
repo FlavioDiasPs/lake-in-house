@@ -15,7 +15,7 @@ resources:
       catalog: ${var.catalog}
       photon: false
       channel: CURRENT
-      continuous: true
+      continuous: false
       libraries:
         - file:
             path: ../pipelines/*/*.sql

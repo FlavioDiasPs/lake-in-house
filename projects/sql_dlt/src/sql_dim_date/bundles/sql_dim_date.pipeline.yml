@@ -1,7 +1,7 @@
 resources:
   pipelines:
-    sql_fct_transaction:
-      name: sql_fct_transaction
+    sql_dim_date:
+      name: sql_dim_date
       clusters:
         - label: default
           instance_pool_id: ${var.pool_workers}
@@ -15,7 +15,7 @@ resources:
       catalog: ${var.catalog}
       photon: false
       channel: CURRENT
-      continuous: true
+      continuous: false
       libraries:
         - file:
             path: ../pipelines/*/*.sql

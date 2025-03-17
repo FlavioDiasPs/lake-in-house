@@ -1,0 +1,47 @@
+resources:
+  jobs:
+    fct_transaction_daily_amount_agg:
+      name: fct_transaction_daily_amount_agg
+
+      # Run daily at 5:00 AM São Paulo time (corrected cron expression)
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?" # Runs at 5:00 AM daily
+        timezone_id: America/Sao_Paulo
+
+      job_clusters:
+        - job_cluster_key: this_workflow_cluster
+          new_cluster:
+            instance_pool_id: ${var.pool_workers}
+            driver_instance_pool_id: ${var.pool_drivers}
+            spark_version: "13.3.x-scala2.12" # Fixed to valid DBR version
+
+      tasks:
+        - task_key: sql_fct_transaction_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.sql_fct_transaction.id}
+
+        - task_key: if_timeframe_condition
+          depends_on:
+            - task_key: sql_fct_transaction_pipeline
+          job_cluster_key: this_workflow_cluster # Link to job cluster
+          notebook_task:
+            notebook_path: "../pipelines/4-platinum/if_timeframe_condition.ipynb"
+
+        - task_key: check_if_timeframe_condition
+          depends_on:
+            - task_key: if_timeframe_condition
+          condition_task:
+            op: EQUAL_TO
+            left: "{{tasks.if_timeframe_condition.values.should_run}}"
+            right: "true"
+
+        - task_key: fct_transaction_pipeline_daily_amount_agg
+          depends_on:
+            - task_key: check_if_timeframe_condition
+              outcome: "true"
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              source: "WORKSPACE" # Specify source as WORKSPACE
+              path: "../pipelines/4-platinum/fct_transaction_pipeline_daily_amount_agg.sql" # Full workspace path
+          run_if: "ALL_SUCCESS"
