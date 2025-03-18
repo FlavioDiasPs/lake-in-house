@@ -1,6 +1,7 @@
 # app
 projects/sample_data*
 flink-pipeline-output*
+.vscode/settings.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
