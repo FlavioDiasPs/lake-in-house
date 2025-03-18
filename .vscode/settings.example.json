@@ -1,0 +1,30 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "host.docker.internal",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "my_connection_on_vscode",
+            "database": "postgres",
+            "username": "postgres",
+            "password": "postgres"
+        },
+        {
+            "connectionMethod": "Hostname and Token",
+            "catalog": "lab",
+            "previewLimit": 50,
+            "driver": "Databricks",
+            "name": "databricks_small_serverless",
+            "host": "<host>",
+            "path": "<path>"
+        }
+    ],
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportUnknownMemberType": "none",
+        "reportUnknownVariableType": "none"
+    },
+    "jupyter.interactiveWindow.cellMarker.codeRegex": "^# COMMAND ----------|^# Databricks notebook source|^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+    "jupyter.interactiveWindow.cellMarker.default": "# COMMAND ----------",
+    "python.languageServer": "Pylance"
+}
